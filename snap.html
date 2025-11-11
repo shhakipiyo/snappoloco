@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>snappoloco - Photobooth</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="snap.css">
+ </head>
+ <body>
+  <div class="container">
+   <header class="header">
+    <h1 class="logo">snappoloco</h1>
+   </header>
+   <main class="main">
+    <section class="section" id="categorySection">
+     <h2 class="section-title">Pilih Jenis Frame</h2>
+     <div class="frame-categories">
+      <div class="frame-category" data-frame="polaroid">
+       <div class="frame-preview polaroid"></div>
+       <h3 class="frame-category-title">Polaroid</h3>
+      </div>
+      <div class="frame-category" data-frame="strip2">
+       <div class="frame-preview strip2"></div>
+       <h3 class="frame-category-title">Photostrip 2</h3>
+      </div>
+      <div class="frame-category" data-frame="strip3">
+       <div class="frame-preview strip3"></div>
+       <h3 class="frame-category-title">Photostrip 3</h3>
+      </div>
+      <div class="frame-category" data-frame="strip4">
+       <div class="frame-preview strip4"></div>
+       <h3 class="frame-category-title">Photostrip 4</h3>
+      </div>
+      <div class="frame-category" data-frame="premium" onclick="showPremiumFrames()">
+       <div class="frame-preview premium-box"></div>
+       <h3 class="frame-category-title">Frame Premium</h3>
+      </div>
+     </div>
+    </section>
+    <section class="section frame-options" id="frameOptions">
+     <button class="btn btn-back" onclick="backToCategories()">← Kembali ke Pilihan Frame</button>
+     <div class="frame-section">
+      <h3 class="frame-section-title">Frame Gratis <span class="badge badge-free">Free</span></h3>
+      <div class="frame-grid" id="freeFrames"></div>
+     </div>
+    </section>
+    <section class="section frame-options" id="premiumSection">
+     <button class="btn btn-back" onclick="backToCategories()">← Kembali ke Pilihan Frame</button>
+     <div class="frame-section">
+      <h3 class="frame-section-title">Frame Premium <span class="badge badge-premium">Premium</span></h3>
+      <div class="frame-grid">
+       <div class="frame-item premium">
+        <div class="frame-display premium-image">
+         <img src="" class="premium-frame-img">
+        </div>
+        <div class="frame-name">Frame 1</div>
+       </div>
+       <div class="frame-item premium">
+        <div class="frame-display premium-image">
+         <img src="" class="premium-frame-img">
+        </div>
+        <div class="frame-name">Frame 2</div>
+       </div>
+       <div class="frame-item premium">
+        <div class="frame-display premium-image">
+         <img src="" class="premium-frame-img">
+        </div>
+        <div class="frame-name">Frame 3</div>
+       </div>
+       <div class="frame-item premium">
+        <div class="frame-display premium-image">
+         <img src="" class="premium-frame-img">
+        </div>
+        <div class="frame-name">Frame 4</div>
+       </div>
+      </div>
+      <button class="btn btn-order" onclick="orderToWhatsApp()" style="max-width: 300px; margin: 30px auto 0;">Order via WhatsApp</button>
+     </div>
+    </section>
+    <section class="section photo-editor" id="photoEditor">
+     <button class="btn btn-back" onclick="backToFrameOptions()">← Kembali ke Frame</button>
+     <div class="editor-container">
+      <h3 style="text-align: center; margin-bottom: 30px; color: #4a5568;" id="editorTitle">Edit Frame Anda</h3>
+      <div class="frame-preview-container">
+       <canvas id="frameCanvas" class="frame-canvas"></canvas>
+      </div>
+      <div id="photoSlots" class="photo-slots"></div>
+      <button class="generate-frame-btn" id="generateBtn" onclick="generateFinalFrame()" disabled>Upload semua foto dulu</button>
+     </div>
+    </section>
+   </main>
+  </div>
+  <div class="upload-modal" id="colorModal">
+   <div class="upload-content">
+    <h3 style="margin-bottom: 20px; color: #4a5568;">Pilih Warna Frame</h3>
+    <div id="colorOptions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin: 20px 0;"></div>
+    <div style="display: flex; gap: 15px; margin-top: 20px;">
+     <button class="btn" style="background: #e5e7eb; color: #4b5563;" onclick="closeColorModal()">Batal</button>
+    </div>
+   </div>
+  </div>
+  <script src="snap.js"></script>
+ </body>
+</html>  
