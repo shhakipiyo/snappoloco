@@ -498,13 +498,24 @@ function backToFrameOptions() {
 }
 
 function orderToWhatsApp() {
-    const message = `Halo! Saya ingin memesan frame premium.
+    const message =
+`Halo! Saya ingin memesan Frame Premium.
 
-Mohon informasi lebih lanjut untuk pemesanan. Terima kasih!`;
+📝 DETAIL PESANAN:
+Nama:
+Pilihan Frame: Frame 1 / Frame 2 / Frame 3
+Jenis Cetak: Soft File / Hard File
 
-    const whatsappUrl = `https://wa.me/6282152917180?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+💰 PRICELIST:
+- Soft File: Rp 3.000
+- Hard File: Rp 8.000
+
+Mohon informasi lebih lanjut. Terima kasih!`;
+
+    const whatsappUrl = "https://wa.me/6282152917180?text=" + encodeURIComponent(message);
+    window.open(whatsappUrl, "_blank");
 }
+
 
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
