@@ -4,6 +4,9 @@ let selectedColor = '';
 let photoSlots = [];
 let currentEditingSlot = -1;
 
+// High resolution scale factor for print quality (300 DPI)
+const PRINT_SCALE = 3;
+
 // Frame specifications (in pixels, converted from cm at 96 DPI)
 const frameSpecs = {
     polaroid: {
@@ -227,8 +230,8 @@ function selectPhoto(slotIndex) {
     input.onchange = function(e) {
         const file = e.target.files[0];
         if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                showNotification('Ukuran file terlalu besar! Maksimal 5MB', 'error');
+            if (file.size > 10 * 1024 * 1024) {
+                showNotification('Ukuran file terlalu besar! Maksimal 10MB', 'error');
                 return;
             }
             
@@ -333,46 +336,51 @@ function updateFramePreview() {
     
     // Draw photos based on frame type
     if (currentFrameType === 'polaroid') {
-        drawPolaroidPhoto(ctx, spec, 0);
+        drawPolaroidPhoto(ctx, spec, 0, 1);
     } else {
-        drawStripPhotos(ctx, spec);
+        drawStripPhotos(ctx, spec, 1);
     }
 }
 
-function drawPolaroidPhoto(ctx, spec, slotIndex) {
+function drawPolaroidPhoto(ctx, spec, slotIndex, scale = 1) {
     const photoData = photoSlots[slotIndex];
     if (!photoData.image) return;
     
     const img = photoData.image;
-    const scale = photoData.scale;
-    const offsetX = photoData.offsetX;
-    const offsetY = photoData.offsetY;
+    const photoScale = photoData.scale;
+    const offsetX = photoData.offsetX * scale;
+    const offsetY = photoData.offsetY * scale;
+    
+    const photoWidth = spec.photoWidth * scale;
+    const photoHeight = spec.photoHeight * scale;
+    const photoX = spec.photoX * scale;
+    const photoY = spec.photoY * scale;
     
     // Calculate aspect ratio and fit image properly - maintain original proportions
     const imgAspect = img.width / img.height;
-    const frameAspect = spec.photoWidth / spec.photoHeight;
+    const frameAspect = photoWidth / photoHeight;
     
     let drawWidth, drawHeight;
     
     // Always maintain original aspect ratio
     if (imgAspect > frameAspect) {
         // Image is wider - fit to height and let width overflow
-        drawHeight = spec.photoHeight * scale;
+        drawHeight = photoHeight * photoScale;
         drawWidth = drawHeight * imgAspect;
     } else {
         // Image is taller - fit to width and let height overflow
-        drawWidth = spec.photoWidth * scale;
+        drawWidth = photoWidth * photoScale;
         drawHeight = drawWidth / imgAspect;
     }
     
     // Calculate position with offset - center the image
-    const x = spec.photoX + offsetX + (spec.photoWidth - drawWidth) / 2;
-    const y = spec.photoY + offsetY + (spec.photoHeight - drawHeight) / 2;
+    const x = photoX + offsetX + (photoWidth - drawWidth) / 2;
+    const y = photoY + offsetY + (photoHeight - drawHeight) / 2;
     
     // Clip to photo area
     ctx.save();
     ctx.beginPath();
-    ctx.rect(spec.photoX, spec.photoY, spec.photoWidth, spec.photoHeight);
+    ctx.rect(photoX, photoY, photoWidth, photoHeight);
     ctx.clip();
     
     // Draw image maintaining aspect ratio
@@ -380,43 +388,49 @@ function drawPolaroidPhoto(ctx, spec, slotIndex) {
     ctx.restore();
 }
 
-function drawStripPhotos(ctx, spec) {
+function drawStripPhotos(ctx, spec, scale = 1) {
     photoSlots.forEach((photoData, index) => {
         if (!photoData.image) return;
         
         const img = photoData.image;
-        const scale = photoData.scale;
-        const offsetX = photoData.offsetX;
-        const offsetY = photoData.offsetY;
+        const photoScale = photoData.scale;
+        const offsetX = photoData.offsetX * scale;
+        const offsetY = photoData.offsetY * scale;
+        
+        const borderLeft = spec.borderLeft * scale;
+        const borderTop = spec.borderTop * scale;
+        const photoWidth = spec.photoWidth * scale;
+        const photoHeight = spec.photoHeight * scale;
+        const photoSpacing = spec.photoSpacing * scale;
         
         // Calculate photo position
-        const photoY = spec.borderTop + index * (spec.photoHeight + spec.photoSpacing);
+        const photoY = borderTop + index * (photoHeight + photoSpacing);
         
         // Calculate aspect ratio and fit image properly - maintain original proportions
         const imgAspect = img.width / img.height;
-        const frameAspect = spec.photoWidth / spec.photoHeight;
+        const frameAspect = photoWidth / photoHeight;
         
         let drawWidth, drawHeight;
         
         // Always maintain original aspect ratio
         if (imgAspect > frameAspect) {
             // Image is wider - fit to height and let width overflow
-            drawHeight = spec.photoHeight * scale;
+            drawHeight = photoHeight * photoScale;
             drawWidth = drawHeight * imgAspect;
         } else {
             // Image is taller - fit to width and let height overflow
-            drawWidth = spec.photoWidth * scale;
+            drawWidth = photoWidth * photoScale;
             drawHeight = drawWidth / imgAspect;
         }
         
         // Calculate position with offset - center the image
-        const x = spec.borderLeft + offsetX + (spec.photoWidth - drawWidth) / 2;
-        const y = photoY + offsetY + (spec.photoHeight - drawHeight) / 2;
+        const x = borderLeft + offsetX + (photoWidth - drawWidth) / 2;
+        const y = photoY + offsetY + (photoHeight - drawHeight) / 2;
         
         // Clip to photo area
         ctx.save();
         ctx.beginPath();
-        ctx.rect(spec.borderLeft, photoY, spec.photoWidth, spec.photoHeight);
+        ctx.rect(borderLeft, photoY, photoWidth, photoHeight);
         ctx.clip();
         
         // Draw image maintaining aspect ratio
@@ -440,9 +454,37 @@ function checkAllPhotosLoaded() {
     }
 }
 
+function generateHighResFrame() {
+    const spec = frameSpecs[currentFrameType];
+    
+    // Create high resolution canvas
+    const highResCanvas = document.createElement('canvas');
+    highResCanvas.width = spec.width * PRINT_SCALE;
+    highResCanvas.height = spec.height * PRINT_SCALE;
+    
+    const ctx = highResCanvas.getContext('2d');
+    
+    // Enable high quality image rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Set background color
+    ctx.fillStyle = getColorCode(selectedColor);
+    ctx.fillRect(0, 0, highResCanvas.width, highResCanvas.height);
+    
+    // Draw photos at high resolution
+    if (currentFrameType === 'polaroid') {
+        drawPolaroidPhoto(ctx, spec, 0, PRINT_SCALE);
+    } else {
+        drawStripPhotos(ctx, spec, PRINT_SCALE);
+    }
+    
+    return highResCanvas;
+}
+
 function generateFinalFrame() {
-    const canvas = document.getElementById('frameCanvas');
-    showPhotoResult(canvas);
+    const highResCanvas = generateHighResFrame();
+    showPhotoResult(highResCanvas);
 }
 
 function showPhotoResult(canvas) {
@@ -455,6 +497,7 @@ function showPhotoResult(canvas) {
             <div style="margin: 20px 0; text-align: center;">
                 <canvas id="resultCanvas" style="max-width: 100%; border: 1px solid #ddd; border-radius: 8px;"></canvas>
             </div>
+
             <div style="display: flex; gap: 15px; margin-top: 20px;">
                 <button class="btn btn-upload" onclick="downloadFrame()">Download Frame</button>
                 <button class="btn" style="background: #6b7280; color: white;" onclick="closeResultModal()">Tutup</button>
@@ -464,14 +507,15 @@ function showPhotoResult(canvas) {
     
     document.body.appendChild(resultModal);
     
-    // Copy canvas to result modal
+    // Copy canvas to result modal (scaled down for preview)
     const resultCanvas = resultModal.querySelector('#resultCanvas');
-    resultCanvas.width = canvas.width;
-    resultCanvas.height = canvas.height;
+    const spec = frameSpecs[currentFrameType];
+    resultCanvas.width = spec.width;
+    resultCanvas.height = spec.height;
     const resultCtx = resultCanvas.getContext('2d');
-    resultCtx.drawImage(canvas, 0, 0);
+    resultCtx.drawImage(canvas, 0, 0, spec.width, spec.height);
     
-    // Store canvas for download
+    // Store high-res canvas for download
     window.currentFrameCanvas = canvas;
 }
 
@@ -479,9 +523,10 @@ function downloadFrame() {
     if (window.currentFrameCanvas) {
         const link = document.createElement('a');
         link.download = `snappoloco-${currentFrameType}-${selectedColor}-${Date.now()}.png`;
-        link.href = window.currentFrameCanvas.toDataURL();
+        // Use maximum quality for PNG
+        link.href = window.currentFrameCanvas.toDataURL('image/png', 1.0);
         link.click();
-        showNotification('Frame berhasil didownload!', 'success');
+        showNotification('Frame berhasil didownload! (High Resolution)', 'success');
     }
 }
 
